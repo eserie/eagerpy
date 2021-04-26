@@ -338,6 +338,9 @@ class TensorFlowTensor(BaseTensor):
 
         x = self.raw
         if isinstance(indices, int):
+            indices = tf.convert_to_tensor(indices)
+
+        if isinstance(indices, tf.Tensor):
             if isinstance(values_, int) or isinstance(values_, float):
                 values_ = tf.fill(x.shape[-1:], values_)
             return type(self)(
