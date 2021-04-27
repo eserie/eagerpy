@@ -1,6 +1,6 @@
 import numbers
 from functools import partial
-from typing import Any, TypeVar
+from typing import Any
 
 import numpy as np
 from jax.tree_util import tree_flatten, tree_unflatten
