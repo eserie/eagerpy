@@ -69,8 +69,10 @@ def astensor(x: Union[NativeTensor, Tensor, Any]) -> Union[Tensor, Any]:  # type
     return x
 
 
-def astensors(*xs: Union[NativeTensor, Tensor]) -> Tuple[Tensor, ...]:  # type: ignore
-    return tuple(astensor(x) for x in xs)
+def astensors(data: Any) -> Any:
+    leaf_values, tree_def = tree_flatten(data)
+    leaf_values = tuple(astensor(value) for value in leaf_values)
+    return tree_unflatten(tree_def, leaf_values)
 
 
 T = TypeVar("T")
@@ -110,12 +112,6 @@ def astensor_(x: T) -> Tuple[Tensor, RestoreTypeFunc[T]]:
 
 def astensors_(x: T, *xs: T) -> Tuple[Tuple[Tensor, ...], RestoreTypeFunc[T]]:
     return astensors(x, *xs), RestoreTypeFunc[T](x)
-
-
-def as_tensors(data: Any) -> Any:
-    leaf_values, tree_def = tree_flatten(data)
-    leaf_values = tuple(astensor(value) for value in leaf_values)
-    return tree_unflatten(tree_def, leaf_values)
 
 
 def has_tensor(tree_def: Any) -> bool:

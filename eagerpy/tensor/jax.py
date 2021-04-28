@@ -420,7 +420,7 @@ class JAXTensor(BaseTensor):
     def _value_and_grad_fn(  # noqa: F811 (waiting for pyflakes > 2.1.1)
         self: TensorType, f: Callable, has_aux: bool = False
     ) -> Callable[..., Tuple]:
-        from eagerpy.astensor import as_tensors, as_raw_tensors
+        from ..astensor import astensors, as_raw_tensors
 
         def value_and_grad(
             x: JAXTensor, *args: Any, **kwargs: Any
@@ -430,7 +430,7 @@ class JAXTensor(BaseTensor):
 
             loss_aux, grad = jax.value_and_grad(f, has_aux=has_aux)(x, *args, **kwargs)
             assert grad.shape == x.shape
-            loss_aux, grad = as_tensors((loss_aux, grad))
+            loss_aux, grad = astensors((loss_aux, grad))
 
             if has_aux:
                 loss, aux = loss_aux
