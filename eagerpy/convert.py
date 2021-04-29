@@ -21,8 +21,7 @@ def convert_to_tensor(data: Any, tensor_type: str) -> Any:
         data structure with converted tensors.
     """
     name = _get_module_name(data)
-    m = sys.modules
-    if m not in ["numpy", "jax", "torch", "tensorflow"]:
+    if name not in ["numpy", "jax", "torch", "tensorflow"]:
         # do not convert
         return data
 
