@@ -1686,15 +1686,37 @@ def my_universal_function_with_non_tensors(a: int, b: Tensor, c: Tensor) -> Tens
     return (a + b * c).square()
 
 
-@pytest.mark.parametrize("astensor", [False, True])
+@pytest.mark.parametrize("others_astensors", [False, True])
 @compare_all
-def test_eager_function_with_non_tensors(t: Tensor, astensor: bool) -> Tensor:
-    if astensor:
-        b = t
+def test_eager_function_with_non_tensors_arg1(
+    t: Tensor, others_astensors: bool
+) -> Tensor:
+    x1 = 3
+
+    if others_astensors:
+        x2 = t
     else:
-        b = t.raw
-    a = 3
-    c = b
-    result = my_universal_function_with_non_tensors(a, b, c)
-    assert isinstance(result, type(b))
+        x2 = t.raw
+    x3 = x2
+    result = my_universal_function_with_non_tensors(x1, x2, x3)
+    if others_astensors:
+        assert isinstance(result, type(x2))
+    else:
+        assert isinstance(result, type(x2))
+    return ep.astensor(result)
+
+
+@pytest.mark.parametrize("others_astensors", [False, True])
+@compare_all
+def test_eager_function_with_non_tensors_arg2(
+    t: Tensor, others_astensors: bool
+) -> Tensor:
+    if others_astensors:
+        x1 = t
+    else:
+        x1 = t.raw
+    x2 = 3
+    x3 = x1
+    result = my_universal_function_with_non_tensors(x1, x2, x3)
+    assert isinstance(result, type(x1))
     return ep.astensor(result)
