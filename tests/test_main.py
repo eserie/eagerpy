@@ -108,7 +108,7 @@ def test_astensors_tensors_restore(t: Tensor) -> None:
 
 def test_module() -> None:
     assert ep.istensor(ep.numpy.tanh([3, 5]))
-    assert not ep.istensor(ep.numpy.tanh(3))
+    assert ep.istensor(ep.numpy.tanh(3))
 
 
 def test_module_dir() -> None:
