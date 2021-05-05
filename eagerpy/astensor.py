@@ -1,3 +1,4 @@
+from numbers import Number
 import functools
 from typing import (
     TYPE_CHECKING,
@@ -49,27 +50,29 @@ def astensor(x: NativeTensor) -> Tensor:  # type: ignore
 
 
 def astensor(x: Union[NativeTensor, Tensor, Any]) -> Union[Tensor, Any]:  # type: ignore
-    if isinstance(x, Tensor):
-        return x
     # we use the module name instead of isinstance
     # to avoid importing all the frameworks
     name = _get_module_name(x)
     m = sys.modules
 
-    if name == "torch" and isinstance(x, m[name].Tensor):  # type: ignore
-        return PyTorchTensor(x)
-    if name == "tensorflow" and isinstance(x, m[name].Tensor):  # type: ignore
+    if name == "torch":
+        return PyTorchTensor(x)  # type: ignore
+    if name == "tensorflow":
         return TensorFlowTensor(x)
-    if (name == "jax" or name == "jaxlib") and isinstance(x, m["jax"].numpy.ndarray):  # type: ignore
+    if name == "jax" or name == "jaxlib":
         return JAXTensor(x)
-    if name == "numpy" and isinstance(x, m[name].ndarray):  # type: ignore
+    if name == "numpy":
+        return NumPyTensor(x)
+    if isinstance(x, (str, Number)):
         return NumPyTensor(x)
 
     # non Tensor types are returned unmodified
     return x
 
 
-def astensors(data: Any) -> Any:
+def astensors(data: Any, *args) -> Any:  # type: ignore
+    if args:
+        data = (data,) + args
     leaf_values, tree_def = tree_flatten(data)
     leaf_values = tuple(astensor(value) for value in leaf_values)
     return tree_unflatten(tree_def, leaf_values)
