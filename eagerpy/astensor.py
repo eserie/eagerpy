@@ -9,6 +9,7 @@ from typing import (
     Generic,
     Any,
     Callable,
+    cast,
 )
 import sys
 
@@ -102,11 +103,21 @@ class RestoreTypeFunc(Generic[T]):
         # catch other types, otherwise we would return type T for input type Any
         ...
 
-    def __call__(self, *args):  # type: ignore  # noqa: F811
-        result = tuple(as_raw_tensor(x) for x in args) if self.unwrap else args
+    def __call__(self, *tensors):  # type: ignore  # noqa: F811
+        result = tuple(self._restore(x) for x in tensors) if self.unwrap else tensors
         if len(result) == 1:
             (result,) = result
         return result
+
+    def _restore(self, x):  # type: ignore  # noqa: F811
+        x_raw = as_raw_tensors(x)
+        if isinstance(x_raw, tuple):
+            assert len(x_raw) == 2
+            x_raw, unwrap = x_raw
+            assert unwrap
+            return x_raw
+        else:
+            return x_raw
 
 
 def astensor_(x: T) -> Tuple[Tensor, RestoreTypeFunc[T]]:
@@ -141,35 +152,47 @@ def as_tensors_any(data: Any) -> Tuple[Any, bool]:
     return tree_unflatten(tree_def, transformed_leaf_values), has_tensor(tree_def)
 
 
+def _is_tensor(x: T) -> bool:
+    name = _get_module_name(x)
+    m = sys.modules
+
+    if name == "torch":
+        return True
+    if name == "tensorflow":
+        return True
+    if name == "jax" or name == "jaxlib":
+        return True
+    if name == "numpy":
+        return True
+    if isinstance(x, (str, int)):
+        return True
+    return False
+
+
+def as_raw_tensor_leave(x: T) -> Any:
+    if _is_tensor(x):
+        unwrap = True
+        return (x, unwrap)
+    else:
+        return x
+
+
 def as_raw_tensor(x: T) -> Any:
     if isinstance(x, Tensor):
-        return x.raw
+        unwrap = True
+        return (x.raw, unwrap)
     else:
         return x
 
 
 def as_raw_tensors(data: Any) -> Any:
     leaf_values, tree_def = tree_flatten(data)
-
     if not has_tensor(tree_def):
         return data
-
     leaf_values = tuple(as_raw_tensor(value) for value in leaf_values)
-    unwrap_leaf_values = []
-    for x in leaf_values:
-        name = _get_module_name(x)
-        m = sys.modules
-        if name == "torch" and isinstance(x, m[name].Tensor):  # type: ignore
-            unwrap_leaf_values.append((x, True))
-        elif name == "tensorflow" and isinstance(x, m[name].Tensor):  # type: ignore
-            unwrap_leaf_values.append((x, True))
-        elif (name == "jax" or name == "jaxlib") and isinstance(x, m["jax"].numpy.ndarray):  # type: ignore
-            unwrap_leaf_values.append((x, True))
-        elif name == "numpy" and isinstance(x, m[name].ndarray):  # type: ignore
-            unwrap_leaf_values.append((x, True))
-        else:
-            unwrap_leaf_values.append(x)
-    return tree_unflatten(tree_def, unwrap_leaf_values)
+    leaf_values_raw = list(map(as_raw_tensor_leave, leaf_values))
+    data_raw = tree_unflatten(tree_def, leaf_values_raw)
+    return data_raw
 
 
 def eager_function(func: Callable[..., T]) -> Callable[..., T]:
