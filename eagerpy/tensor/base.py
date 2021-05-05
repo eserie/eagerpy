@@ -90,7 +90,12 @@ class BaseTensor(Tensor):
 
     @final
     def __add__(self: TensorType, other: TensorOrScalar) -> TensorType:
-        return type(self)(self.raw.__add__(unwrap1(other)))
+        res = self.raw.__add__(unwrap1(other))
+        if res is NotImplemented:
+            res = unwrap1(other).__radd__(self.raw)
+            return cast(TensorType, type(other)(res))
+        else:
+            return type(self)(res)
 
     @final
     def __radd__(self: TensorType, other: TensorOrScalar) -> TensorType:
@@ -98,7 +103,12 @@ class BaseTensor(Tensor):
 
     @final
     def __sub__(self: TensorType, other: TensorOrScalar) -> TensorType:
-        return type(self)(self.raw.__sub__(unwrap1(other)))
+        res = self.raw.__sub__(unwrap1(other))
+        if res is NotImplemented:
+            res = unwrap1(other).__rsub__(self.raw)
+            return cast(TensorType, type(other)(res))
+        else:
+            return type(self)(res)
 
     @final
     def __rsub__(self: TensorType, other: TensorOrScalar) -> TensorType:
@@ -106,7 +116,12 @@ class BaseTensor(Tensor):
 
     @final
     def __mul__(self: TensorType, other: TensorOrScalar) -> TensorType:
-        return type(self)(self.raw.__mul__(unwrap1(other)))
+        res = self.raw.__mul__(unwrap1(other))
+        if res is NotImplemented:
+            res = unwrap1(other).__rmul__(self.raw)
+            return cast(TensorType, type(other)(res))
+        else:
+            return type(self)(res)
 
     @final
     def __rmul__(self: TensorType, other: TensorOrScalar) -> TensorType:
@@ -114,7 +129,12 @@ class BaseTensor(Tensor):
 
     @final
     def __truediv__(self: TensorType, other: TensorOrScalar) -> TensorType:
-        return type(self)(self.raw.__truediv__(unwrap1(other)))
+        res = self.raw.__truediv__(unwrap1(other))
+        if res is NotImplemented:
+            res = unwrap1(other).__rtruediv__(self.raw)
+            return cast(TensorType, type(other)(res))
+        else:
+            return type(self)(res)
 
     @final
     def __rtruediv__(self: TensorType, other: TensorOrScalar) -> TensorType:
@@ -122,7 +142,12 @@ class BaseTensor(Tensor):
 
     @final
     def __floordiv__(self: TensorType, other: TensorOrScalar) -> TensorType:
-        return type(self)(self.raw.__floordiv__(unwrap1(other)))
+        res = self.raw.__floordiv__(unwrap1(other))
+        if res is NotImplemented:
+            res = unwrap1(other).__rfloordiv__(self.raw)
+            return cast(TensorType, type(other)(res))
+        else:
+            return type(self)(res)
 
     @final
     def __rfloordiv__(self: TensorType, other: TensorOrScalar) -> TensorType:
