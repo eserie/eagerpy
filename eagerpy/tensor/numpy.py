@@ -161,7 +161,10 @@ class NumPyTensor(BaseTensor):
     def full_like(self: TensorType, fill_value: float) -> TensorType:
         from ..astensor import as_raw_tensor
 
-        return type(self)(np.full_like(self.raw, as_raw_tensor(fill_value)))
+        fill_value_raw = as_raw_tensor(fill_value)
+        if isinstance(fill_value_raw, tuple):
+            fill_value_raw, _ = fill_value_raw
+        return type(self)(np.full_like(self.raw, fill_value_raw))
 
     def onehot_like(
         self: TensorType, indices: TensorType, *, value: float = 1
