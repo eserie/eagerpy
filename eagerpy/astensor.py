@@ -129,7 +129,15 @@ def astensors_(x: T, *xs: T) -> Tuple[Tuple[Tensor, ...], RestoreTypeFunc[T]]:
 
 
 def has_tensor(tree_def: Any) -> bool:
-    return "<class 'eagerpy.tensor" in str(tree_def)
+    if "NumPyTensor" in str(tree_def):
+        return True
+    if "JAXTensor" in str(tree_def):
+        return True
+    if "TensorFlowTensor" in str(tree_def):
+        return True
+    if "PyTorchTensor" in str(tree_def):
+        return True
+    return False
 
 
 def as_tensors_any(data: Any) -> Tuple[Any, bool]:
